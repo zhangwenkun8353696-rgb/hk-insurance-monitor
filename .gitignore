@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+*.pyo
+data/
+server_out.log
+server_err.log
+.workbuddy/
