@@ -467,12 +467,198 @@
         ::-webkit-scrollbar-track { background: var(--bg-primary); }
         ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
 
-        /* ===== Responsive ===== */
+        /* ===== Responsive: Tablet ===== */
         @media (max-width: 900px) {
             .stats-grid { grid-template-columns: repeat(2, 1fr); }
             .content-grid { grid-template-columns: 1fr; }
             .header { padding: 12px 16px; }
             .main-container { padding: 16px; }
+            .topic-grid { grid-template-columns: repeat(3, 1fr); }
+        }
+
+        /* ===== Responsive: Mobile ===== */
+        @media (max-width: 520px) {
+            body { -webkit-text-size-adjust: 100%; }
+
+            .header {
+                padding: 10px 12px;
+                gap: 8px;
+            }
+            .header-logo {
+                width: 34px; height: 34px;
+                font-size: 16px; border-radius: 8px;
+            }
+            .header-title { font-size: 15px; }
+            .header-subtitle { display: none; }
+            .header-right { gap: 8px; }
+            .last-updated { display: none; }
+            .btn-refresh {
+                padding: 7px 12px; font-size: 12px;
+            }
+            .btn-refresh span.btn-text { display: none; }
+
+            .main-container { padding: 12px; }
+
+            /* Tabs: horizontal scroll */
+            .tabs {
+                width: 100%;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: none;
+                margin-bottom: 16px;
+                padding: 3px;
+                gap: 2px;
+            }
+            .tabs::-webkit-scrollbar { display: none; }
+            .tab {
+                padding: 7px 12px;
+                font-size: 12px;
+                white-space: nowrap;
+                flex-shrink: 0;
+                gap: 4px;
+            }
+            .tab .badge { font-size: 10px; padding: 0 5px; }
+
+            /* Stats: 2x2 grid, compact */
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
+                margin-bottom: 16px;
+            }
+            .stat-card { padding: 14px 12px; }
+            .stat-icon {
+                width: 34px; height: 34px;
+                font-size: 16px; margin-bottom: 8px;
+            }
+            .stat-value { font-size: 22px; }
+            .stat-label { font-size: 11px; }
+
+            /* Content grid: single column */
+            .content-grid {
+                grid-template-columns: 1fr;
+                gap: 12px;
+                margin-bottom: 16px;
+            }
+
+            /* Cards */
+            .card { border-radius: 10px; }
+            .card-header { padding: 12px 14px; }
+            .card-title { font-size: 13px; gap: 6px; }
+            .card-body { padding: 14px; }
+
+            /* Chart */
+            .chart-container { height: 180px; }
+
+            /* Topics: 2 columns */
+            .topic-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 8px;
+            }
+            .topic-card { padding: 12px 8px; }
+            .topic-icon { font-size: 22px; margin-bottom: 4px; }
+            .topic-name { font-size: 11px; }
+            .topic-count { font-size: 18px; }
+
+            /* Alerts */
+            .alert-item { padding: 12px; }
+            .alert-title { font-size: 12px; }
+            .alert-meta { font-size: 10px; gap: 6px; }
+
+            /* Company rows */
+            .company-row {
+                padding: 8px 10px;
+                gap: 8px;
+                flex-wrap: wrap;
+            }
+            .company-name { font-size: 12px; min-width: 80px; }
+            .company-name-en { font-size: 10px; }
+            .company-bar-container { min-width: 60px; }
+
+            /* Filters: 2 per row */
+            .filters-bar {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 8px;
+                margin-bottom: 14px;
+            }
+            .filter-select {
+                width: 100%;
+                padding: 8px 10px;
+                font-size: 12px;
+            }
+
+            /* News items */
+            .news-list { gap: 10px; }
+            .news-item {
+                padding: 14px;
+                border-radius: 10px;
+            }
+            .news-item:hover { transform: none; }
+            .news-header { gap: 8px; margin-bottom: 8px; }
+            .news-title { font-size: 14px; line-height: 1.5; }
+            .sentiment-badge { font-size: 10px; padding: 2px 8px; }
+            .news-summary {
+                font-size: 12px; line-height: 1.6;
+                margin-bottom: 10px;
+                -webkit-line-clamp: 2;
+            }
+            .news-footer { gap: 6px; }
+            .news-tags { gap: 4px; }
+            .news-tag { font-size: 10px; padding: 2px 7px; }
+            .news-meta { font-size: 10px; gap: 8px; }
+            .risk-badge { font-size: 10px; padding: 2px 7px; }
+
+            /* Modal: near-fullscreen on mobile */
+            .modal-overlay { align-items: flex-end; }
+            .modal {
+                width: 100%;
+                max-width: 100%;
+                max-height: 90vh;
+                border-radius: 16px 16px 0 0;
+                animation: slideUp 0.25s ease;
+            }
+            @keyframes slideUp {
+                from { transform: translateY(100%); }
+                to { transform: translateY(0); }
+            }
+            .modal-header { padding: 16px; }
+            .modal-header h3 { font-size: 15px; }
+            .modal-body { padding: 16px; }
+            .modal-body h3 { font-size: 14px !important; }
+            .modal-body p { font-size: 13px !important; }
+            .strategy-item { padding: 10px 12px; font-size: 12px; }
+            .strategy-item .num { min-width: 22px; height: 22px; font-size: 11px; }
+
+            /* Company chart on mobile */
+            .chart-container[style*="300px"] { height: 240px !important; }
+        }
+
+        /* ===== Extra small phones ===== */
+        @media (max-width: 360px) {
+            .stats-grid { gap: 8px; }
+            .stat-card { padding: 10px 8px; }
+            .stat-value { font-size: 20px; }
+            .stat-icon { width: 28px; height: 28px; font-size: 14px; }
+            .tab { padding: 6px 10px; font-size: 11px; }
+            .header-title { font-size: 13px; }
+            .topic-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        /* ===== Safe area for notched phones ===== */
+        @supports (padding-bottom: env(safe-area-inset-bottom)) {
+            body { padding-bottom: env(safe-area-inset-bottom); }
+        }
+
+        /* ===== Touch improvements ===== */
+        @media (hover: none) and (pointer: coarse) {
+            .news-item:hover { transform: none; box-shadow: none; }
+            .alert-item:hover { transform: none; }
+            .topic-card:hover { transform: none; }
+            .company-row:hover { background: var(--bg-secondary); }
+            .btn-refresh:hover { transform: none; }
+            .btn-refresh:active { background: #3d6ae8; }
+            .news-item:active { border-color: var(--accent-blue); }
+            .alert-item:active { background: var(--bg-hover); }
         }
 
         /* ===== Empty State ===== */
@@ -500,7 +686,7 @@
     <div class="header-right">
         <span class="last-updated" id="lastUpdated">--</span>
         <button class="btn-refresh" id="btnRefresh" onclick="refreshData()">
-            <i class="ri-refresh-line"></i> 刷新数据
+            <i class="ri-refresh-line"></i> <span class="btn-text">刷新数据</span>
         </button>
     </div>
 </header>
