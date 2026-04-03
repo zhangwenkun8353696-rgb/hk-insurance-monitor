@@ -1,0 +1,1054 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>香港保险舆情监控系统</title>
+<style>
+:root {
+    --primary: #1a73e8;
+    --primary-dark: #1557b0;
+    --primary-light: #e8f0fe;
+    --danger: #dc3545;
+    --danger-light: #fee2e2;
+    --warning: #f59e0b;
+    --warning-light: #fef3c7;
+    --success: #10b981;
+    --success-light: #d1fae5;
+    --neutral: #6b7280;
+    --bg: #f0f2f5;
+    --card: #ffffff;
+    --text: #1f2937;
+    --text-light: #6b7280;
+    --border: #e5e7eb;
+    --shadow: 0 1px 3px rgba(0,0,0,0.1);
+    --shadow-lg: 0 4px 12px rgba(0,0,0,0.12);
+    --radius: 8px;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+
+/* Header */
+.header { background: linear-gradient(135deg, #1a73e8 0%, #0d47a1 100%); color: white; padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 8px rgba(0,0,0,0.15); position: sticky; top: 0; z-index: 100; }
+.header h1 { font-size: 20px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+.header-actions { display: flex; gap: 12px; align-items: center; }
+.header .scrape-btn { background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: white; padding: 8px 16px; border-radius: var(--radius); cursor: pointer; font-size: 14px; transition: all 0.2s; }
+.header .scrape-btn:hover { background: rgba(255,255,255,0.3); }
+.header .scrape-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.scrape-status { font-size: 12px; color: rgba(255,255,255,0.8); }
+
+/* Layout */
+.container { max-width: 1400px; margin: 0 auto; padding: 20px; }
+.tabs { display: flex; gap: 4px; background: var(--card); border-radius: var(--radius); padding: 4px; margin-bottom: 20px; box-shadow: var(--shadow); }
+.tab { flex: 1; text-align: center; padding: 10px 16px; cursor: pointer; border-radius: 6px; font-size: 14px; font-weight: 500; color: var(--text-light); transition: all 0.2s; }
+.tab.active { background: var(--primary); color: white; }
+.tab:hover:not(.active) { background: #f3f4f6; }
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+/* Stats Row */
+.stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 20px; }
+.stat-card { background: var(--card); border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow); text-align: center; }
+.stat-card .number { font-size: 32px; font-weight: 700; color: var(--primary); }
+.stat-card .label { font-size: 13px; color: var(--text-light); margin-top: 4px; }
+
+/* Section Title */
+.section-title { font-size: 17px; font-weight: 600; color: var(--text); margin: 24px 0 14px; display: flex; align-items: center; gap: 8px; }
+.section-title:first-child { margin-top: 0; }
+
+/* Collapsible Panel */
+.panel { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); margin-bottom: 16px; overflow: hidden; }
+.panel-header { padding: 14px 20px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; user-select: none; transition: background 0.2s; }
+.panel-header:hover { background: #f9fafb; }
+.panel-header h3 { font-size: 15px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+.panel-header .toggle { font-size: 12px; color: var(--text-light); transition: transform 0.3s; }
+.panel-header .toggle.open { transform: rotate(180deg); }
+.panel-body { padding: 0 20px 16px; display: none; }
+.panel-body.open { display: block; }
+
+/* News mini list (for drill-down) */
+.news-mini-list { display: flex; flex-direction: column; gap: 8px; }
+.news-mini-item { display: flex; align-items: flex-start; gap: 10px; padding: 10px 12px; background: #f9fafb; border-radius: 6px; transition: background 0.2s; border-left: 3px solid transparent; }
+.news-mini-item:hover { background: #f0f2f5; }
+.news-mini-item.risk-high { border-left-color: var(--danger); }
+.news-mini-item.risk-medium { border-left-color: var(--warning); }
+.news-mini-item.sentiment-positive { border-left-color: var(--success); }
+.news-mini-item.sentiment-negative { border-left-color: var(--danger); }
+.news-mini-item .mini-content { flex: 1; min-width: 0; }
+.news-mini-item .mini-title { font-size: 14px; font-weight: 500; color: var(--text); margin-bottom: 3px; }
+.news-mini-item .mini-title a { color: var(--text); text-decoration: none; }
+.news-mini-item .mini-title a:hover { color: var(--primary); text-decoration: underline; }
+.news-mini-item .mini-meta { font-size: 12px; color: var(--text-light); display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.news-mini-item .mini-summary { font-size: 12px; color: var(--text-light); margin: 4px 0; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.news-mini-item .mini-badges { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 4px; }
+
+/* Badge */
+.badge { padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 500; white-space: nowrap; display: inline-block; }
+.badge-positive { background: #d1fae5; color: #065f46; }
+.badge-negative { background: #fee2e2; color: #991b1b; }
+.badge-neutral { background: #f3f4f6; color: #374151; }
+.badge-high { background: #fee2e2; color: #991b1b; }
+.badge-medium { background: #fef3c7; color: #92400e; }
+.badge-low { background: #e0f2fe; color: #075985; }
+.badge-source { background: #ede9fe; color: #5b21b6; }
+.badge-topic { background: #e0f2fe; color: #075985; }
+.badge-company { background: #fce7f3; color: #9d174d; }
+.badge-P0 { background: #fee2e2; color: #991b1b; font-weight: 700; }
+.badge-P1 { background: #fef3c7; color: #92400e; font-weight: 700; }
+.badge-P2 { background: #e0f2fe; color: #075985; font-weight: 700; }
+
+/* Link button */
+.link-btn { color: var(--primary); text-decoration: none; font-size: 12px; font-weight: 500; display: inline-flex; align-items: center; gap: 3px; white-space: nowrap; }
+.link-btn:hover { text-decoration: underline; }
+
+/* Filters */
+.filters { background: var(--card); border-radius: var(--radius); padding: 16px; margin-bottom: 20px; box-shadow: var(--shadow); display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.filter-group { display: flex; align-items: center; gap: 6px; }
+.filter-group label { font-size: 13px; color: var(--text-light); white-space: nowrap; }
+.filter-group select, .filter-group input { padding: 6px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; background: white; }
+.filter-group input[type="text"] { width: 200px; }
+.search-btn { background: var(--primary); color: white; border: none; padding: 7px 16px; border-radius: 6px; cursor: pointer; font-size: 13px; }
+
+/* News List */
+.news-list { display: flex; flex-direction: column; gap: 12px; }
+.news-item { background: var(--card); border-radius: var(--radius); padding: 16px 20px; box-shadow: var(--shadow); transition: box-shadow 0.2s; border-left: 4px solid transparent; }
+.news-item:hover { box-shadow: var(--shadow-lg); }
+.news-item.sentiment-positive { border-left-color: var(--success); }
+.news-item.sentiment-negative { border-left-color: var(--danger); }
+.news-item.sentiment-neutral { border-left-color: var(--neutral); }
+.news-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 8px; }
+.news-title { font-size: 16px; font-weight: 600; color: var(--text); flex: 1; }
+.news-title a { color: var(--text); text-decoration: none; }
+.news-title a:hover { color: var(--primary); text-decoration: underline; }
+.news-badges { display: flex; gap: 6px; flex-shrink: 0; flex-wrap: wrap; }
+.news-summary { font-size: 14px; color: var(--text-light); line-height: 1.7; margin-bottom: 10px; }
+.news-meta { display: flex; gap: 16px; font-size: 12px; color: var(--text-light); flex-wrap: wrap; align-items: center; }
+.news-enhanced { background: #f9fafb; border-radius: 6px; padding: 10px 14px; margin-top: 10px; font-size: 13px; }
+.news-enhanced .impact { color: var(--warning); font-weight: 500; }
+.news-enhanced .facts { color: var(--primary); }
+.social-metrics { display: flex; gap: 12px; font-size: 12px; color: var(--text-light); }
+.social-metrics span { display: flex; align-items: center; gap: 3px; }
+
+/* Pagination */
+.pagination { display: flex; justify-content: center; align-items: center; gap: 8px; margin-top: 20px; padding: 16px; }
+.page-btn { padding: 8px 14px; border: 1px solid var(--border); border-radius: 6px; background: white; cursor: pointer; font-size: 13px; color: var(--text); }
+.page-btn:hover:not(:disabled) { background: #f3f4f6; }
+.page-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+.page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.page-info { font-size: 13px; color: var(--text-light); }
+
+/* Target Company Panel */
+.target-panel { background: var(--card); border-radius: var(--radius); padding: 20px; margin-bottom: 20px; box-shadow: var(--shadow); border: 2px solid var(--primary); }
+.target-panel h3 { color: var(--primary); margin-bottom: 12px; font-size: 16px; }
+.target-select { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+.target-select select { padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 14px; min-width: 200px; }
+.target-select button { background: var(--primary); color: white; border: none; padding: 8px 20px; border-radius: 6px; cursor: pointer; font-size: 14px; }
+.target-info { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin-top: 14px; }
+.target-metric { text-align: center; padding: 12px; background: #f0f7ff; border-radius: 6px; }
+.target-metric .val { font-size: 24px; font-weight: 700; color: var(--primary); }
+.target-metric .lbl { font-size: 12px; color: var(--text-light); }
+
+/* Strategy Card */
+.strategy-summary { background: linear-gradient(135deg, #eff6ff 0%, #f0f7ff 100%); border-radius: var(--radius); padding: 16px 20px; margin-bottom: 16px; font-size: 14px; color: var(--text); border-left: 4px solid var(--primary); }
+.strategy-card { background: var(--card); border-radius: var(--radius); margin-bottom: 12px; box-shadow: var(--shadow); overflow: hidden; }
+.strategy-card.priority-P0 { border-left: 4px solid var(--danger); }
+.strategy-card.priority-P1 { border-left: 4px solid var(--warning); }
+.strategy-card.priority-P2 { border-left: 4px solid var(--primary); }
+.strategy-card-header { padding: 14px 20px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+.strategy-card-header:hover { background: #f9fafb; }
+.strategy-card-header .left { display: flex; align-items: center; gap: 10px; flex: 1; }
+.strategy-card-header .title { font-size: 15px; font-weight: 600; }
+.strategy-card-header .toggle-arrow { font-size: 12px; color: var(--text-light); transition: transform 0.3s; }
+.strategy-card-header .toggle-arrow.open { transform: rotate(180deg); }
+.strategy-body { padding: 0 20px 16px; display: none; }
+.strategy-body.open { display: block; }
+.strategy-content { font-size: 14px; color: var(--text-light); margin-bottom: 12px; line-height: 1.7; }
+.strategy-actions { list-style: none; margin-bottom: 14px; }
+.strategy-actions li { font-size: 13px; padding: 4px 0; color: var(--text); }
+.strategy-actions li::before { content: "\2192 "; color: var(--primary); font-weight: bold; }
+.strategy-news-label { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+
+/* Signals Panel */
+.signals-panel { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; margin-top: 20px; }
+.signal-card { background: var(--card); border-radius: var(--radius); padding: 16px; box-shadow: var(--shadow); }
+.signal-card h4 { font-size: 14px; color: var(--text-light); margin-bottom: 10px; }
+.signal-bar { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; font-size: 13px; }
+.signal-bar .bar { flex: 1; height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; }
+.signal-bar .bar-fill { height: 100%; border-radius: 4px; transition: width 0.5s; }
+
+/* Grid for topic analysis */
+.topic-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 12px; }
+.topic-card { background: #f9fafb; border-radius: 6px; padding: 14px; border-left: 3px solid var(--primary); }
+.topic-card .topic-name { font-size: 14px; font-weight: 600; margin-bottom: 6px; }
+.topic-card .topic-stats { display: flex; gap: 10px; font-size: 12px; color: var(--text-light); flex-wrap: wrap; }
+.topic-card .topic-stats span { display: flex; align-items: center; gap: 3px; }
+
+/* Companies Grid */
+.companies-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+.company-card { background: var(--card); border-radius: var(--radius); padding: 16px; box-shadow: var(--shadow); cursor: pointer; transition: all 0.2s; }
+.company-card:hover { box-shadow: var(--shadow-lg); transform: translateY(-2px); }
+.company-card.is-target { border: 2px solid var(--primary); }
+.company-card .name { font-size: 16px; font-weight: 600; }
+.company-card .name-en { font-size: 12px; color: var(--text-light); }
+.company-card .desc { font-size: 13px; color: var(--text-light); margin-top: 6px; }
+.company-card .region-badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; margin-top: 8px; }
+.region-hk { background: #fef3c7; color: #92400e; }
+.region-mainland { background: #fee2e2; color: #991b1b; }
+.company-stats { display: flex; gap: 12px; margin-top: 10px; font-size: 12px; }
+.company-stats span { display: flex; align-items: center; gap: 3px; }
+
+/* Risk alert banner */
+.risk-banner { background: linear-gradient(135deg, #fef2f2, #fee2e2); border: 1px solid #fecaca; border-radius: var(--radius); padding: 14px 20px; margin-bottom: 16px; display: flex; align-items: center; gap: 12px; }
+.risk-banner .icon { font-size: 28px; }
+.risk-banner .info { flex: 1; }
+.risk-banner .info h4 { font-size: 14px; color: #991b1b; margin-bottom: 2px; }
+.risk-banner .info p { font-size: 13px; color: #7f1d1d; }
+
+/* Loading / Empty */
+.loading { text-align: center; padding: 40px; color: var(--text-light); }
+.loading .spinner { display: inline-block; width: 32px; height: 32px; border: 3px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.empty-state { text-align: center; padding: 60px 20px; color: var(--text-light); }
+.empty-state .icon { font-size: 48px; margin-bottom: 12px; }
+.empty-state .title { font-size: 18px; font-weight: 600; color: var(--text); margin-bottom: 8px; }
+.empty-state p { font-size: 14px; }
+
+/* Responsive */
+@media (max-width: 768px) {
+    .container { padding: 12px; }
+    .stats-row { grid-template-columns: repeat(2, 1fr); }
+    .filters { flex-direction: column; }
+    .news-header { flex-direction: column; }
+    .tabs { flex-wrap: wrap; }
+    .signals-panel { grid-template-columns: 1fr; }
+    .topic-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+    <h1>&#x1f6e1;&#xfe0f; 香港保险舆情监控系统</h1>
+    <div class="header-actions">
+        <span class="scrape-status" id="scrapeStatus">就绪</span>
+        <button class="scrape-btn" id="scrapeBtn" onclick="triggerScrape()">&#x1f504; 立即采集</button>
+    </div>
+</div>
+
+<div class="container">
+    <!-- Tabs -->
+    <div class="tabs">
+        <div class="tab active" data-tab="dashboard" onclick="switchTab('dashboard')">&#x1f4ca; 仪表板</div>
+        <div class="tab" data-tab="news" onclick="switchTab('news')">&#x1f4f0; 新闻列表</div>
+        <div class="tab" data-tab="strategy" onclick="switchTab('strategy')">&#x1f3af; 策略建议</div>
+        <div class="tab" data-tab="companies" onclick="switchTab('companies')">&#x1f3e2; 公司管理</div>
+    </div>
+
+    <!-- ===================== DASHBOARD TAB ===================== -->
+    <div class="tab-content active" id="tab-dashboard">
+
+        <!-- Section 1: Overview Stats -->
+        <div class="section-title">&#x1f4c8; 数据总览</div>
+        <div class="stats-row" id="statsRow">
+            <div class="stat-card"><div class="number" id="totalNews">-</div><div class="label">总新闻数</div></div>
+            <div class="stat-card"><div class="number" style="color:var(--success)" id="positiveCount">-</div><div class="label">正面</div></div>
+            <div class="stat-card"><div class="number" style="color:var(--neutral)" id="neutralCount">-</div><div class="label">中性</div></div>
+            <div class="stat-card"><div class="number" style="color:var(--danger)" id="negativeCount">-</div><div class="label">负面</div></div>
+            <div class="stat-card"><div class="number" style="color:var(--danger)" id="highRiskCount">-</div><div class="label">高风险</div></div>
+            <div class="stat-card"><div class="number" style="color:var(--warning)" id="mediumRiskCount">-</div><div class="label">中风险</div></div>
+        </div>
+
+        <!-- Section 2: Industry Analysis -->
+        <div class="section-title">&#x1f3ed; 行业舆情分析</div>
+        <div id="industrySection">
+            <div class="loading"><div class="spinner"></div></div>
+        </div>
+
+        <!-- Section 3: Target Company Analysis -->
+        <div class="section-title">&#x1f3af; 目标公司分析
+            <span style="font-size:13px;font-weight:400;color:var(--text-light);margin-left:8px" id="dashTargetLabel"></span>
+        </div>
+        <div id="companyAnalysisSection">
+            <div class="panel">
+                <div class="panel-header" style="cursor:default">
+                    <h3>请先在"策略建议"或"公司管理"页设定目标公司</h3>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 4: Distribution Charts -->
+        <div class="section-title">&#x1f4ca; 分布统计</div>
+        <div class="signals-panel" id="signalsPanel"></div>
+    </div>
+
+    <!-- ===================== NEWS TAB ===================== -->
+    <div class="tab-content" id="tab-news">
+        <div class="filters">
+            <div class="filter-group">
+                <label>情感:</label>
+                <select id="filterSentiment" onchange="loadNews()">
+                    <option value="all">全部</option>
+                    <option value="positive">正面</option>
+                    <option value="neutral">中性</option>
+                    <option value="negative">负面</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>风险:</label>
+                <select id="filterRisk" onchange="loadNews()">
+                    <option value="all">全部</option>
+                    <option value="high">高风险</option>
+                    <option value="medium">中风险</option>
+                    <option value="low">低风险</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>来源:</label>
+                <select id="filterSourceType" onchange="loadNews()">
+                    <option value="all">全部</option>
+                    <option value="news">新闻媒体</option>
+                    <option value="social">社交媒体</option>
+                    <option value="official">官方机构</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>公司:</label>
+                <select id="filterCompany" onchange="loadNews()"></select>
+            </div>
+            <div class="filter-group">
+                <label>话题:</label>
+                <select id="filterTopic" onchange="loadNews()"></select>
+            </div>
+            <div class="filter-group">
+                <input type="text" id="filterSearch" placeholder="搜索关键词..." onkeypress="if(event.key==='Enter')loadNews()">
+                <button class="search-btn" onclick="loadNews()">搜索</button>
+            </div>
+        </div>
+        <div class="news-list" id="newsList"></div>
+        <div class="pagination" id="pagination"></div>
+    </div>
+
+    <!-- ===================== STRATEGY TAB ===================== -->
+    <div class="tab-content" id="tab-strategy">
+        <div class="target-panel">
+            <h3>&#x1f3af; 设定目标公司</h3>
+            <div class="target-select">
+                <select id="strategyTargetSelect"></select>
+                <button onclick="setTargetCompany()">设为目标</button>
+                <span id="currentTarget" style="font-size:14px;color:var(--text-light)"></span>
+            </div>
+        </div>
+        <div id="strategiesContainer">
+            <div class="loading"><div class="spinner"></div><p style="margin-top:12px">加载中...</p></div>
+        </div>
+    </div>
+
+    <!-- ===================== COMPANIES TAB ===================== -->
+    <div class="tab-content" id="tab-companies">
+        <div class="filters" style="margin-bottom:16px">
+            <div class="filter-group">
+                <label>地区:</label>
+                <select id="companyRegionFilter" onchange="loadCompanies()">
+                    <option value="all">全部</option>
+                    <option value="hk">香港持牌</option>
+                    <option value="mainland">大陆公司</option>
+                </select>
+            </div>
+        </div>
+        <div class="companies-grid" id="companiesGrid"></div>
+    </div>
+</div>
+
+<script>
+const API = "";
+let currentPage = 1;
+let companiesData = {};
+let topicsData = {};
+let dashboardData = {};
+let targetCompanyId = null;
+
+// ============================================================
+// Initialization
+// ============================================================
+document.addEventListener("DOMContentLoaded", () => {
+    loadCompanyOptions();
+    loadTopicOptions();
+    loadDashboard();
+    loadNews();
+    loadCompanies();
+    loadStrategies();
+    setInterval(checkScrapeStatus, 5000);
+});
+
+// ============================================================
+// Tab switching
+// ============================================================
+function switchTab(name) {
+    document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+    document.querySelectorAll(".tab-content").forEach(t => t.classList.remove("active"));
+    document.querySelector(`.tab[data-tab="${name}"]`).classList.add("active");
+    document.getElementById(`tab-${name}`).classList.add("active");
+    if (name === "news") loadNews();
+    else if (name === "dashboard") loadDashboard();
+    else if (name === "strategy") loadStrategies();
+    else if (name === "companies") loadCompanies();
+}
+
+// ============================================================
+// Dashboard — Overview + Industry + Company + Distribution
+// ============================================================
+async function loadDashboard() {
+    try {
+        // Load base dashboard stats
+        const [dashResp, industryResp] = await Promise.all([
+            fetch(`${API}/api/dashboard`),
+            fetch(`${API}/api/industry_analysis`),
+        ]);
+        const data = await dashResp.json();
+        const industry = await industryResp.json();
+        dashboardData = data;
+        companiesData = data.companies || companiesData;
+        topicsData = data.topics || topicsData;
+        targetCompanyId = data.target_company;
+
+        // === Section 1: Overview Stats ===
+        document.getElementById("totalNews").textContent = data.total_news || 0;
+        const sd = data.sentiment_distribution || {};
+        document.getElementById("positiveCount").textContent = sd.positive || 0;
+        document.getElementById("neutralCount").textContent = sd.neutral || 0;
+        document.getElementById("negativeCount").textContent = sd.negative || 0;
+        const rd = industry.risk || {};
+        document.getElementById("highRiskCount").textContent = rd.high || 0;
+        document.getElementById("mediumRiskCount").textContent = rd.medium || 0;
+
+        // === Section 2: Industry Analysis ===
+        renderIndustryAnalysis(industry);
+
+        // === Section 3: Target Company Analysis ===
+        if (targetCompanyId && companiesData[targetCompanyId]) {
+            document.getElementById("dashTargetLabel").textContent = `(${companiesData[targetCompanyId].name})`;
+            loadCompanyAnalysis(targetCompanyId);
+        } else {
+            document.getElementById("dashTargetLabel").textContent = "(未设定)";
+            document.getElementById("companyAnalysisSection").innerHTML = `
+                <div class="panel"><div class="panel-header" style="cursor:default">
+                    <h3 style="color:var(--text-light)">&#x1f4cc; 请先在"策略建议"或"公司管理"页设定目标公司</h3>
+                </div></div>`;
+        }
+
+        // === Section 4: Distribution Charts ===
+        renderSignals(data);
+    } catch (e) {
+        console.error("Dashboard load failed:", e);
+    }
+}
+
+function renderIndustryAnalysis(industry) {
+    const section = document.getElementById("industrySection");
+    let html = "";
+
+    // Risk alert banner
+    const riskNews = industry.risk_news || [];
+    const highRiskCount = riskNews.filter(n => n.risk_level === "high").length;
+    const medRiskCount = riskNews.filter(n => n.risk_level === "medium").length;
+
+    if (highRiskCount > 0) {
+        html += `<div class="risk-banner">
+            <div class="icon">&#x26a0;&#xfe0f;</div>
+            <div class="info">
+                <h4>行业风险预警</h4>
+                <p>发现 ${highRiskCount} 条高风险 + ${medRiskCount} 条中风险舆情，请关注以下详情</p>
+            </div>
+        </div>`;
+    }
+
+    // Topic analysis cards
+    const topicAnalysis = industry.topic_analysis || {};
+    if (Object.keys(topicAnalysis).length) {
+        html += `<div class="section-title" style="font-size:14px;margin:12px 0 10px">&#x1f3f7;&#xfe0f; 各话题舆情分布</div>`;
+        html += '<div class="topic-grid">';
+        const sorted = Object.entries(topicAnalysis).sort((a,b) => b[1].total - a[1].total);
+        for (const [tid, stats] of sorted) {
+            const tname = topicsData[tid] || tid;
+            html += `<div class="topic-card">
+                <div class="topic-name">${esc(tname)}</div>
+                <div class="topic-stats">
+                    <span>&#x1f4f0; ${stats.total}条</span>
+                    <span style="color:var(--success)">&#x1f44d; ${stats.positive || 0}</span>
+                    <span style="color:var(--neutral)">&#x2796; ${stats.neutral || 0}</span>
+                    <span style="color:var(--danger)">&#x1f44e; ${stats.negative || 0}</span>
+                    ${stats.high_risk ? `<span style="color:var(--danger)">&#x26a0;&#xfe0f; ${stats.high_risk}高风险</span>` : ""}
+                </div>
+            </div>`;
+        }
+        html += '</div>';
+    }
+
+    // Risk news drill-down panel
+    if (riskNews.length) {
+        html += `<div class="panel" style="margin-top:16px">
+            <div class="panel-header" onclick="togglePanel(this)">
+                <h3>&#x26a0;&#xfe0f; 风险舆情详情 (${riskNews.length}条)</h3>
+                <span class="toggle">&#x25bc;</span>
+            </div>
+            <div class="panel-body">
+                <div class="news-mini-list">
+                    ${riskNews.map(n => renderMiniNewsItem(n)).join("")}
+                </div>
+            </div>
+        </div>`;
+    }
+
+    section.innerHTML = html;
+}
+
+async function loadCompanyAnalysis(companyId) {
+    const section = document.getElementById("companyAnalysisSection");
+    section.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+
+    try {
+        const resp = await fetch(`${API}/api/company_analysis?company_id=${companyId}`);
+        const data = await resp.json();
+
+        if (data.error || !data.total) {
+            section.innerHTML = `<div class="panel"><div class="panel-header" style="cursor:default">
+                <h3 style="color:var(--text-light)">&#x1f4ad; ${esc(companiesData[companyId]?.name || companyId)} 暂无相关舆情数据</h3>
+            </div></div>`;
+            return;
+        }
+
+        const company = data.company || {};
+        let html = "";
+
+        // Company stats overview
+        html += `<div class="target-info">
+            <div class="target-metric"><div class="val">${data.total}</div><div class="lbl">总提及</div></div>
+            <div class="target-metric"><div class="val" style="color:var(--success)">${data.sentiment?.positive || 0}</div><div class="lbl">正面</div></div>
+            <div class="target-metric"><div class="val" style="color:var(--neutral)">${data.sentiment?.neutral || 0}</div><div class="lbl">中性</div></div>
+            <div class="target-metric"><div class="val" style="color:var(--danger)">${data.sentiment?.negative || 0}</div><div class="lbl">负面</div></div>
+            <div class="target-metric"><div class="val" style="color:var(--danger)">${data.risk?.high || 0}</div><div class="lbl">高风险</div></div>
+            <div class="target-metric"><div class="val" style="color:var(--warning)">${data.risk?.medium || 0}</div><div class="lbl">中风险</div></div>
+        </div>`;
+
+        // Company topic breakdown
+        const topics = data.topics || {};
+        if (Object.keys(topics).length) {
+            html += `<div style="margin-top:14px"><div class="section-title" style="font-size:14px;margin:0 0 8px">&#x1f3f7;&#xfe0f; ${esc(company.name)} 相关话题</div>`;
+            const maxV = Math.max(...Object.values(topics), 1);
+            html += Object.entries(topics).map(([k,v]) => `
+                <div class="signal-bar"><span style="width:80px">${esc(topicsData[k] || k)}</span><div class="bar"><div class="bar-fill" style="width:${v/maxV*100}%;background:var(--primary)"></div></div><span>${v}</span></div>
+            `).join("");
+            html += '</div>';
+        }
+
+        // Company news drill-down
+        const news = data.news || [];
+        if (news.length) {
+            html += `<div class="panel" style="margin-top:16px">
+                <div class="panel-header" onclick="togglePanel(this)">
+                    <h3>&#x1f4f0; ${esc(company.name)} 相关舆情 (${news.length}条) — 点击展开查看详情</h3>
+                    <span class="toggle">&#x25bc;</span>
+                </div>
+                <div class="panel-body">
+                    <div class="news-mini-list">
+                        ${news.map(n => renderMiniNewsItem(n)).join("")}
+                    </div>
+                </div>
+            </div>`;
+        }
+
+        section.innerHTML = html;
+    } catch (e) {
+        console.error("Company analysis load failed:", e);
+        section.innerHTML = `<div class="empty-state"><div class="icon">&#x274c;</div><div class="title">加载失败</div></div>`;
+    }
+}
+
+function renderSignals(data) {
+    const panel = document.getElementById("signalsPanel");
+    let html = "";
+
+    // Source types
+    const st = data.source_types || {};
+    if (Object.keys(st).length) {
+        const maxVal = Math.max(...Object.values(st), 1);
+        html += `<div class="signal-card"><h4>&#x1f4e1; 来源分布</h4>${Object.entries(st).map(([k,v]) => `
+            <div class="signal-bar"><span style="width:60px">${esc(k)}</span><div class="bar"><div class="bar-fill" style="width:${v/maxVal*100}%;background:var(--primary)"></div></div><span>${v}</span></div>
+        `).join("")}</div>`;
+    }
+
+    // Topic distribution
+    const td = data.topic_distribution || {};
+    if (Object.keys(td).length) {
+        const maxVal = Math.max(...Object.values(td), 1);
+        html += `<div class="signal-card"><h4>&#x1f3f7;&#xfe0f; 话题分布</h4>${Object.entries(td).sort((a,b)=>b[1]-a[1]).slice(0,8).map(([k,v]) => `
+            <div class="signal-bar"><span style="width:80px">${esc(topicsData[k] || k)}</span><div class="bar"><div class="bar-fill" style="width:${v/maxVal*100}%;background:var(--warning)"></div></div><span>${v}</span></div>
+        `).join("")}</div>`;
+    }
+
+    // Company mentions ranking
+    const cs = data.company_stats || {};
+    if (Object.keys(cs).length) {
+        const entries = Object.entries(cs).sort((a,b) => b[1].total - a[1].total).slice(0, 10);
+        const maxVal = Math.max(...entries.map(e => e[1].total), 1);
+        html += `<div class="signal-card"><h4>&#x1f3e2; 公司提及排名</h4>${entries.map(([k,v]) => `
+            <div class="signal-bar"><span style="width:80px">${esc(companiesData[k]?.name || k)}</span><div class="bar"><div class="bar-fill" style="width:${v.total/maxVal*100}%;background:#8b5cf6"></div></div><span>${v.total}</span></div>
+        `).join("")}</div>`;
+    }
+
+    panel.innerHTML = html;
+}
+
+// ============================================================
+// Mini News Item (for drill-down in panels)
+// ============================================================
+function renderMiniNewsItem(n) {
+    const riskClass = n.risk_level === "high" ? "risk-high" : n.risk_level === "medium" ? "risk-medium" : "";
+    const sentClass = n.sentiment === "negative" ? "sentiment-negative" : n.sentiment === "positive" ? "sentiment-positive" : "";
+    const cls = riskClass || sentClass;
+    const sentimentText = {positive: "正面", negative: "负面", neutral: "中性"}[n.sentiment] || "中性";
+    const riskText = {high: "&#x26a0;&#xfe0f;高风险", medium: "&#x26a1;中风险", low: "&#x2705;低风险"}[n.risk_level] || "";
+
+    const titleHtml = n.url
+        ? `<a href="${esc(n.url)}" target="_blank" rel="noopener">${esc(n.title)}</a>`
+        : esc(n.title);
+
+    const companyBadges = (n.companies || []).map(c =>
+        `<span class="badge badge-company">${esc(companiesData[c]?.name || c)}</span>`
+    ).join("");
+
+    const topicBadges = (n.topics || []).map(t =>
+        `<span class="badge badge-topic">${esc(topicsData[t] || t)}</span>`
+    ).join("");
+
+    return `<div class="news-mini-item ${cls}">
+        <div class="mini-content">
+            <div class="mini-title">${titleHtml}</div>
+            ${n.summary ? `<div class="mini-summary">${esc(n.summary)}</div>` : ""}
+            <div class="mini-badges">${companyBadges}${topicBadges}</div>
+            <div class="mini-meta">
+                <span class="badge badge-${n.sentiment || 'neutral'}">${sentimentText}</span>
+                ${riskText ? `<span class="badge badge-${n.risk_level}">${riskText}</span>` : ""}
+                <span class="badge badge-source">${esc(n.source || "")}</span>
+                <span>${formatDate(n.published)}</span>
+                ${n.url ? `<a class="link-btn" href="${esc(n.url)}" target="_blank" rel="noopener">&#x1f517; 查看原文</a>` : ""}
+            </div>
+        </div>
+    </div>`;
+}
+
+// ============================================================
+// Toggle panel open/close
+// ============================================================
+function togglePanel(headerEl) {
+    const body = headerEl.nextElementSibling;
+    const arrow = headerEl.querySelector(".toggle") || headerEl.querySelector(".toggle-arrow");
+    if (body.classList.contains("open")) {
+        body.classList.remove("open");
+        if (arrow) arrow.classList.remove("open");
+    } else {
+        body.classList.add("open");
+        if (arrow) arrow.classList.add("open");
+    }
+}
+
+// ============================================================
+// News List
+// ============================================================
+async function loadNews() {
+    const container = document.getElementById("newsList");
+    container.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+
+    const params = new URLSearchParams({
+        page: currentPage,
+        per_page: 20,
+        sentiment: document.getElementById("filterSentiment").value,
+        risk: document.getElementById("filterRisk").value,
+        source_type: document.getElementById("filterSourceType").value,
+        company: document.getElementById("filterCompany").value,
+        topic: document.getElementById("filterTopic").value,
+        search: document.getElementById("filterSearch").value,
+    });
+
+    try {
+        const resp = await fetch(`${API}/api/news?${params}`);
+        const data = await resp.json();
+
+        if (!data.news || data.news.length === 0) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <div class="icon">&#x1f4ed;</div>
+                    <div class="title">暂无新闻数据</div>
+                    <p>点击上方"立即采集"按钮获取最新数据</p>
+                </div>`;
+            document.getElementById("pagination").innerHTML = "";
+            return;
+        }
+
+        container.innerHTML = data.news.map(renderNewsItem).join("");
+        renderPagination(data.page, data.total_pages, data.total);
+    } catch (e) {
+        container.innerHTML = '<div class="empty-state"><div class="icon">&#x274c;</div><div class="title">加载失败</div><p>请检查后端是否启动</p></div>';
+        console.error("News load failed:", e);
+    }
+}
+
+function renderNewsItem(item) {
+    const sentimentClass = `sentiment-${item.sentiment || 'neutral'}`;
+    const sentimentText = {positive: "正面", negative: "负面", neutral: "中性"}[item.sentiment] || "中性";
+    const sentimentBadge = `badge-${item.sentiment || 'neutral'}`;
+    const riskBadge = item.risk_level ? `<span class="badge badge-${item.risk_level}">${{high:"&#x26a0;&#xfe0f;高",medium:"&#x26a1;中",low:"&#x2705;低"}[item.risk_level] || item.risk_level}风险</span>` : "";
+    const sourceBadge = `<span class="badge badge-source">${esc(item.source || item.source_type || '')}</span>`;
+
+    const companyBadges = (item.companies || []).map(c =>
+        `<span class="badge badge-company">${esc(companiesData[c]?.name || c)}</span>`
+    ).join("");
+
+    const topicBadges = (item.topics || []).map(t =>
+        `<span class="badge badge-topic">${esc(topicsData[t] || t)}</span>`
+    ).join("");
+
+    let enhancedHtml = "";
+    const parts = [];
+    if (item.impact_assessment) parts.push(`<span class="impact">${esc(item.impact_assessment)}</span>`);
+    if (item.key_facts && item.key_facts.length) {
+        const factsStr = item.key_facts.map(f => f.value || JSON.stringify(f)).join(", ");
+        parts.push(`<span class="facts">关键数据: ${esc(factsStr)}</span>`);
+    }
+    if (parts.length) enhancedHtml = `<div class="news-enhanced">${parts.join(" | ")}</div>`;
+
+    let metricsHtml = "";
+    if (item.likes || item.comments || item.shares || item.views) {
+        metricsHtml = `<div class="social-metrics">
+            ${item.likes ? `<span>&#x1f44d; ${item.likes}</span>` : ""}
+            ${item.comments ? `<span>&#x1f4ac; ${item.comments}</span>` : ""}
+            ${item.shares ? `<span>&#x1f504; ${item.shares}</span>` : ""}
+            ${item.views ? `<span>&#x1f441;&#xfe0f; ${item.views}</span>` : ""}
+        </div>`;
+    }
+
+    const titleHtml = item.url
+        ? `<a href="${esc(item.url)}" target="_blank" rel="noopener">${esc(item.title)}</a>`
+        : esc(item.title);
+
+    return `
+        <div class="news-item ${sentimentClass}">
+            <div class="news-header">
+                <div class="news-title">${titleHtml}</div>
+                <div class="news-badges">
+                    <span class="badge ${sentimentBadge}">${sentimentText}</span>
+                    ${riskBadge}
+                    ${sourceBadge}
+                </div>
+            </div>
+            <div class="news-summary">${esc(item.summary || '')}</div>
+            <div class="news-badges" style="margin-bottom:8px">${companyBadges}${topicBadges}</div>
+            ${enhancedHtml}
+            ${metricsHtml}
+            <div class="news-meta">
+                <span>&#x1f4c5; ${formatDate(item.published)}</span>
+                ${item.url ? `<a class="link-btn" href="${esc(item.url)}" target="_blank" rel="noopener">&#x1f517; 查看原文 &#x2192;</a>` : ""}
+            </div>
+        </div>
+    `;
+}
+
+function renderPagination(page, totalPages, total) {
+    const container = document.getElementById("pagination");
+    if (totalPages <= 1) { container.innerHTML = ""; return; }
+    let html = `<button class="page-btn" onclick="goPage(${page-1})" ${page<=1?'disabled':''}>&larr; 上一页</button>`;
+    const start = Math.max(1, page - 2);
+    const end = Math.min(totalPages, page + 2);
+    if (start > 1) html += `<button class="page-btn" onclick="goPage(1)">1</button>`;
+    if (start > 2) html += `<span class="page-info">...</span>`;
+    for (let i = start; i <= end; i++) {
+        html += `<button class="page-btn ${i===page?'active':''}" onclick="goPage(${i})">${i}</button>`;
+    }
+    if (end < totalPages - 1) html += `<span class="page-info">...</span>`;
+    if (end < totalPages) html += `<button class="page-btn" onclick="goPage(${totalPages})">${totalPages}</button>`;
+    html += `<button class="page-btn" onclick="goPage(${page+1})" ${page>=totalPages?'disabled':''}>下一页 &rarr;</button>`;
+    html += `<span class="page-info">共 ${total} 条</span>`;
+    container.innerHTML = html;
+}
+
+function goPage(p) {
+    currentPage = p;
+    loadNews();
+    window.scrollTo({top: 0, behavior: 'smooth'});
+}
+
+// ============================================================
+// Filter Selects
+// ============================================================
+async function loadCompanyOptions() {
+    try {
+        const resp = await fetch(`${API}/api/companies`);
+        companiesData = await resp.json();
+        const sel = document.getElementById("filterCompany");
+        sel.innerHTML = '<option value="all">全部公司</option>';
+        const hk = Object.entries(companiesData).filter(([,c]) => c.region === "hk");
+        const ml = Object.entries(companiesData).filter(([,c]) => c.region === "mainland");
+        if (hk.length) {
+            sel.innerHTML += '<optgroup label="-- 香港持牌 --">';
+            hk.forEach(([id, c]) => sel.innerHTML += `<option value="${id}">${c.name} (${c.name_en})</option>`);
+            sel.innerHTML += '</optgroup>';
+        }
+        if (ml.length) {
+            sel.innerHTML += '<optgroup label="-- 大陆公司 --">';
+            ml.forEach(([id, c]) => sel.innerHTML += `<option value="${id}">${c.name} (${c.name_en})</option>`);
+            sel.innerHTML += '</optgroup>';
+        }
+        // Strategy target select
+        const stratSel = document.getElementById("strategyTargetSelect");
+        stratSel.innerHTML = '<option value="">-- 选择目标公司 --</option>';
+        Object.entries(companiesData).forEach(([id, c]) => {
+            stratSel.innerHTML += `<option value="${id}">${c.name} (${c.name_en}) [${c.region === 'hk' ? '香港' : '大陆'}]</option>`;
+        });
+    } catch (e) { console.error("Load companies failed:", e); }
+}
+
+async function loadTopicOptions() {
+    try {
+        const resp = await fetch(`${API}/api/topics`);
+        topicsData = await resp.json();
+        const sel = document.getElementById("filterTopic");
+        sel.innerHTML = '<option value="all">全部话题</option>';
+        Object.entries(topicsData).forEach(([id, name]) => {
+            sel.innerHTML += `<option value="${id}">${name}</option>`;
+        });
+    } catch (e) { console.error("Load topics failed:", e); }
+}
+
+// ============================================================
+// Strategies — with expandable related news
+// ============================================================
+async function loadStrategies() {
+    const container = document.getElementById("strategiesContainer");
+    container.innerHTML = '<div class="loading"><div class="spinner"></div><p style="margin-top:12px">正在生成策略建议...</p></div>';
+
+    try {
+        const targetResp = await fetch(`${API}/api/target`);
+        const targetData = await targetResp.json();
+        targetCompanyId = targetData.target;
+        const cName = targetData.company ? targetData.company.name : "未设定";
+        document.getElementById("currentTarget").textContent = `当前目标: ${cName}`;
+        if (targetData.target) {
+            document.getElementById("strategyTargetSelect").value = targetData.target;
+        }
+
+        const resp = await fetch(`${API}/api/strategies`);
+        const data = await resp.json();
+        const newsMap = data.related_news_map || {};
+
+        let html = "";
+        if (data.summary) {
+            html += `<div class="strategy-summary">&#x1f4cb; ${esc(data.summary)}</div>`;
+        }
+
+        if (data.strategies && data.strategies.length) {
+            html += data.strategies.map(s => {
+                const relatedNews = newsMap[s.type] || [];
+                const hasNews = relatedNews.length > 0;
+                return `
+                <div class="strategy-card priority-${s.priority}">
+                    <div class="strategy-card-header" onclick="togglePanel(this)">
+                        <div class="left">
+                            <span class="badge badge-${s.priority}">${s.priority}</span>
+                            <span class="title">${esc(s.title)}</span>
+                        </div>
+                        <span class="toggle-arrow">&#x25bc;</span>
+                    </div>
+                    <div class="strategy-body">
+                        <div class="strategy-content">${esc(s.content)}</div>
+                        <ul class="strategy-actions">
+                            ${(s.actions || []).map(a => `<li>${esc(a)}</li>`).join("")}
+                        </ul>
+                        ${hasNews ? `
+                            <div class="strategy-news-label">&#x1f4f0; 相关舆情 (${relatedNews.length}条) — 点击标题跳转原文</div>
+                            <div class="news-mini-list">
+                                ${relatedNews.map(n => renderMiniNewsItem(n)).join("")}
+                            </div>
+                        ` : '<div style="font-size:13px;color:var(--text-light);padding:8px 0">暂无直接相关舆情</div>'}
+                    </div>
+                </div>`;
+            }).join("");
+        } else {
+            html += '<div class="empty-state"><div class="icon">&#x1f4a1;</div><div class="title">暂无策略建议</div><p>请先采集数据，然后设定目标公司</p></div>';
+        }
+
+        // Signals at bottom
+        if (data.signals) {
+            html += '<div class="signals-panel" style="margin-top:20px">';
+            const sig = data.signals;
+            if (sig.hot_topics && Object.keys(sig.hot_topics).length) {
+                const maxV = Math.max(...Object.values(sig.hot_topics), 1);
+                html += `<div class="signal-card"><h4>&#x1f525; 热点话题</h4>${Object.entries(sig.hot_topics).map(([k,v]) => `
+                    <div class="signal-bar"><span style="width:80px">${esc(topicsData[k] || k)}</span><div class="bar"><div class="bar-fill" style="width:${v/maxV*100}%;background:var(--warning)"></div></div><span>${v}</span></div>
+                `).join("")}</div>`;
+            }
+            if (sig.active_companies && Object.keys(sig.active_companies).length) {
+                const maxV = Math.max(...Object.values(sig.active_companies), 1);
+                html += `<div class="signal-card"><h4>&#x1f4ca; 活跃公司</h4>${Object.entries(sig.active_companies).map(([k,v]) => `
+                    <div class="signal-bar"><span style="width:80px">${esc(companiesData[k]?.name || k)}</span><div class="bar"><div class="bar-fill" style="width:${v/maxV*100}%;background:#8b5cf6"></div></div><span>${v}</span></div>
+                `).join("")}</div>`;
+            }
+            html += '</div>';
+        }
+
+        container.innerHTML = html;
+    } catch (e) {
+        container.innerHTML = '<div class="empty-state"><div class="icon">&#x274c;</div><div class="title">加载失败</div><p>请检查后端是否启动</p></div>';
+        console.error("Strategies load failed:", e);
+    }
+}
+
+async function setTargetCompany() {
+    const sel = document.getElementById("strategyTargetSelect");
+    const companyId = sel.value;
+    if (!companyId) { alert("请选择一个目标公司"); return; }
+    try {
+        await fetch(`${API}/api/target`, {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({company_id: companyId}),
+        });
+        loadStrategies();
+        loadDashboard();
+    } catch (e) {
+        alert("设置失败: " + e.message);
+    }
+}
+
+// ============================================================
+// Companies
+// ============================================================
+async function loadCompanies() {
+    const region = document.getElementById("companyRegionFilter").value;
+    try {
+        const resp = await fetch(`${API}/api/companies?region=${region}`);
+        const data = await resp.json();
+        companiesData = {...companiesData, ...data};
+
+        const targetResp = await fetch(`${API}/api/target`);
+        const targetData = await targetResp.json();
+        targetCompanyId = targetData.target;
+
+        let stats = {};
+        try {
+            const dashResp = await fetch(`${API}/api/dashboard`);
+            const dash = await dashResp.json();
+            stats = dash.company_stats || {};
+        } catch(e) {}
+
+        const grid = document.getElementById("companiesGrid");
+        grid.innerHTML = Object.entries(data).map(([id, c]) => {
+            const cs = stats[id];
+            const isTarget = id === targetCompanyId;
+            return `
+                <div class="company-card ${isTarget ? 'is-target' : ''}" onclick="setTarget('${id}')">
+                    <div class="name">${esc(c.name)} ${isTarget ? '&#x1f3af;' : ''}</div>
+                    <div class="name-en">${esc(c.name_en)}</div>
+                    <div class="desc">${esc(c.description || '')}</div>
+                    <span class="region-badge region-${c.region}">${c.region === 'hk' ? '&#x1f1ed;&#x1f1f0; 香港持牌' : '&#x1f1e8;&#x1f1f3; 大陆公司'}</span>
+                    ${cs ? `<div class="company-stats">
+                        <span>&#x1f4f0; ${cs.total || 0}</span>
+                        <span style="color:var(--success)">&#x1f44d; ${cs.positive || 0}</span>
+                        <span style="color:var(--danger)">&#x1f44e; ${cs.negative || 0}</span>
+                    </div>` : '<div class="company-stats"><span style="color:var(--text-light)">暂无数据</span></div>'}
+                </div>
+            `;
+        }).join("");
+    } catch (e) {
+        console.error("Load companies failed:", e);
+    }
+}
+
+async function setTarget(companyId) {
+    if (confirm(`设定 ${companiesData[companyId]?.name || companyId} 为目标公司？`)) {
+        try {
+            await fetch(`${API}/api/target`, {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({company_id: companyId}),
+            });
+            loadCompanies();
+            loadDashboard();
+        } catch (e) { alert("设置失败"); }
+    }
+}
+
+// ============================================================
+// Scraping
+// ============================================================
+async function triggerScrape() {
+    const btn = document.getElementById("scrapeBtn");
+    btn.disabled = true;
+    btn.textContent = "&#x23f3; 采集中...";
+    document.getElementById("scrapeStatus").textContent = "采集中...";
+    try {
+        await fetch(`${API}/api/scrape`, {method: "POST"});
+    } catch (e) {
+        alert("启动采集失败: " + e.message);
+        btn.disabled = false;
+        btn.textContent = "&#x1f504; 立即采集";
+    }
+}
+
+let lastScrapeRunning = false;
+async function checkScrapeStatus() {
+    try {
+        const resp = await fetch(`${API}/api/scrape/status`);
+        const data = await resp.json();
+        const btn = document.getElementById("scrapeBtn");
+        const status = document.getElementById("scrapeStatus");
+
+        if (data.running) {
+            btn.disabled = true;
+            btn.textContent = "&#x23f3; 采集中...";
+            const done = Object.keys(data.results || {}).length;
+            status.textContent = `采集中 (${done}/11)...`;
+            lastScrapeRunning = true;
+        } else {
+            btn.disabled = false;
+            btn.textContent = "&#x1f504; 立即采集";
+            if (data.last_run) {
+                status.textContent = `上次: ${formatDate(data.last_run)}`;
+            }
+            // Refresh data when scrape just completed
+            if (lastScrapeRunning) {
+                lastScrapeRunning = false;
+                loadDashboard();
+                loadNews();
+                loadStrategies();
+            }
+        }
+    } catch (e) {}
+}
+
+// ============================================================
+// Utilities
+// ============================================================
+function esc(str) {
+    if (!str) return "";
+    const div = document.createElement("div");
+    div.textContent = str;
+    return div.innerHTML;
+}
+
+function formatDate(dateStr) {
+    if (!dateStr) return "";
+    try {
+        const d = new Date(dateStr);
+        if (isNaN(d.getTime())) return dateStr;
+        const now = new Date();
+        const diff = now - d;
+        if (diff < 3600000) return Math.floor(diff/60000) + "分钟前";
+        if (diff < 86400000) return Math.floor(diff/3600000) + "小时前";
+        if (diff < 604800000) return Math.floor(diff/86400000) + "天前";
+        return d.toLocaleDateString("zh-CN", {year:"numeric", month:"2-digit", day:"2-digit"});
+    } catch (e) { return dateStr; }
+}
+</script>
+</body>
+</html>
